@@ -6,10 +6,24 @@ module.exports = app => {
     passport.authenticate("google", { scope: ["profile", "email"] })
   );
 
-  app.get("/auth/google/callback", passport.authenticate("google"));
+  app.get(
+    "/auth/google/callback",
+    passport.authenticate("google"),
+    (req, res, next) => {
+      res.redirect("/survey");
+    }
+  );
 
   app.get("/api/current_user", (req, res) => {
-    console.log("aaaaaaaaaaaaaaaaaa", req.user);
-    res.send({ user: req.user, message: "Hello" });
+    if (req.user === undefined) {
+      return res.send({});
+    }
+
+    res.send(req.user);
+  });
+
+  app.get("/api/logout", (req, res) => {
+    req.logout();
+    res.send({});
   });
 };

@@ -9,10 +9,8 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id, done) => {
-  console.log("deserialixe", id);
   User.findById(id)
     .then(user => {
-      console.log("DEsSERIALIXW", user);
       done(null, user);
     })
     .catch(err => console.log(err));
@@ -25,28 +23,20 @@ passport.use(
       clientSecret: keys.googleClientSecret,
       callbackURL: "/auth/google/callback"
     },
-    (accessToken, refreshToken, profile, done) => {
-      console.log(JSON.stringify(profile, undefined, 2));
-      User.findOne({ googleID: profile.id })
-        .then(user => {
-          console.log("USER FOUND IN DB", user);
-          if (user) {
-            console.log("User already signed Up");
-            done(null, user);
-          } else {
-            const newUser = new User({
-              googleID: profile.id,
-              name: profile.displayName,
-              email: profile.emails[0].value
-            });
-            newUser.save().then(result => {
-              done(null, result);
-            });
-          }
-        })
-        .catch(err => {
-          console.log(err);
-        });
+    async (accessToken, refreshToken, profile, done) => {
+      const existinguser = await User.findOne({ googleID: profile.id });
+
+      if (existinguser) {
+        return done(null, existinguser);
+      }
+      const newUser = new User({
+        googleID: profile.id,
+        name: profile.displayName,
+        email: profile.emails[0].value
+      });
+
+      const newuser = await newUser.save();
+      if (newuser) done(null, result);
     }
   )
 );
